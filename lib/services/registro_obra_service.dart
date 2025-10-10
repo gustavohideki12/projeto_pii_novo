@@ -1,0 +1,264 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/registro_obra.dart';
+
+class RegistroObraService {
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _collectionName = 'registros_obras';
+
+  // Obter todos os registros de um usuário
+  static Future<List<RegistroObra>> getRegistros(String userId) async {
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      final registros = snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      
+      // Ordenar localmente por timestamp (mais recente primeiro)
+      registros.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return registros;
+    } catch (e) {
+      print('Erro ao carregar registros: $e');
+      return [];
+    }
+  }
+
+  // Stream de registros em tempo real
+  static Stream<List<RegistroObra>> getRegistrosStream(String userId) {
+    return _firestore
+        .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data(), doc.id);
+      }).toList();
+    });
+  }
+
+  // Obter um registro específico
+  static Future<RegistroObra?> getRegistro(String id) async {
+    try {
+      final DocumentSnapshot doc = await _firestore
+          .collection(_collectionName)
+          .doc(id)
+          .get();
+
+      if (doc.exists) {
+        return RegistroObra.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }
+      return null;
+    } catch (e) {
+      print('Erro ao buscar registro: $e');
+      return null;
+    }
+  }
+
+  // Salvar registro no Firestore
+  static Future<bool> saveRegistro(RegistroObra registro) async {
+    try {
+      await _firestore
+          .collection(_collectionName)
+          .doc(registro.id)
+          .set(registro.toFirestore());
+
+      return true;
+    } catch (e) {
+      print('Erro ao salvar registro: $e');
+      return false;
+    }
+  }
+
+  // Deletar registro do Firestore
+  static Future<bool> deleteRegistro(String id) async {
+    try {
+      await _firestore
+          .collection(_collectionName)
+          .doc(id)
+          .delete();
+
+      return true;
+    } catch (e) {
+      print('Erro ao deletar registro: $e');
+      return false;
+    }
+  }
+
+  // Gerar ID único para registro
+  static String generateRegistroId() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
+  // Criar novo registro
+  static RegistroObra createRegistro({
+    required String userId,
+    required String imageUrl,
+    required String pontoObra,
+    required String etapaObra,
+    String? projectId,
+    String? createdByName,
+    DateTime? timestamp,
+  }) {
+    final id = generateRegistroId();
+    final now = DateTime.now();
+
+    return RegistroObra(
+      id: id,
+      userId: userId,
+      projectId: projectId,
+      imageUrl: imageUrl,
+      pontoObra: pontoObra,
+      etapaObra: etapaObra,
+      createdByName: createdByName,
+      timestamp: timestamp ?? now,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  // Atualizar registro existente
+  static Future<bool> updateRegistro(RegistroObra registro) async {
+    try {
+      final updatedRegistro = registro.copyWith(updatedAt: DateTime.now());
+      return await saveRegistro(updatedRegistro);
+    } catch (e) {
+      print('Erro ao atualizar registro: $e');
+      return false;
+    }
+  }
+
+  // Query auxiliar com filtros
+  static Query<Map<String, dynamic>> _buildFilteredQuery(
+    String userId, {
+    DateTime? start,
+    DateTime? end,
+    String? ponto,
+    String? projectId,
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
+        .collection(_collectionName)
+        .where('userId', isEqualTo: userId);
+
+    if (projectId != null && projectId.trim().isNotEmpty) {
+      query = query.where('projectId', isEqualTo: projectId.trim());
+    }
+    if (ponto != null && ponto.trim().isNotEmpty) {
+      query = query.where('pontoObra', isEqualTo: ponto.trim());
+    }
+    if (start != null) {
+      query = query.where('timestamp', isGreaterThanOrEqualTo: start);
+    }
+    if (end != null) {
+      query = query.where('timestamp', isLessThanOrEqualTo: end);
+    }
+
+    query = query.orderBy('timestamp', descending: true);
+    return query;
+  }
+
+  // Stream com filtros (data e ponto)
+  static Stream<List<RegistroObra>> getRegistrosStreamFiltered(
+    String userId, {
+    DateTime? start,
+    DateTime? end,
+    String? ponto,
+    String? projectId,
+  }) {
+    final query = _buildFilteredQuery(
+      userId,
+      start: start,
+      end: end,
+      ponto: ponto,
+      projectId: projectId,
+    );
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data(), doc.id);
+      }).toList();
+    });
+  }
+
+  // Buscar registros por data (dia específico)
+  static Future<List<RegistroObra>> getRegistrosByDate(String userId, DateTime date) async {
+    try {
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+          .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          .get();
+
+      final registros = snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      
+      registros.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return registros;
+    } catch (e) {
+      print('Erro ao buscar registros por data: $e');
+      return [];
+    }
+  }
+
+  // Buscar registros por ponto da obra
+  static Future<List<RegistroObra>> getRegistrosByPonto(String userId, String pontoObra) async {
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .where('pontoObra', isEqualTo: pontoObra)
+          .get();
+
+      final registros = snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      
+      registros.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return registros;
+    } catch (e) {
+      print('Erro ao buscar registros por ponto: $e');
+      return [];
+    }
+  }
+
+  // Contar registros de um usuário
+  static Future<int> getRegistrosCount(String userId) async {
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      return snapshot.docs.length;
+    } catch (e) {
+      print('Erro ao contar registros: $e');
+      return 0;
+    }
+  }
+
+  // Buscar registros por obra específica
+  static Future<List<RegistroObra>> getRegistrosByProject(String userId, String projectId) async {
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .where('projectId', isEqualTo: projectId)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return RegistroObra.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+    } catch (e) {
+      print('Erro ao buscar registros por projeto: $e');
+      return [];
+    }
+  }
+}

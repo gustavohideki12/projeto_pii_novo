@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Nova paleta moderna baseada em #001489
@@ -72,7 +73,7 @@ class AppTheme {
       useMaterial3: true,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
-      fontFamily: 'Inter', // Fonte moderna (fallback para Roboto)
+      // Base text theme will be overridden below with Inter
 
       // AppBar moderna com gradiente
       appBarTheme: const AppBarTheme(
@@ -108,7 +109,7 @@ class AppTheme {
             letterSpacing: -0.5,
           ),
         ).copyWith(
-          overlayColor: MaterialStateProperty.all(Colors.white.withOpacity(0.1)),
+          overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.1)),
         ),
       ),
 
@@ -159,8 +160,8 @@ class AppTheme {
         ),
       ),
 
-      // Text themes modernas
-      textTheme: const TextTheme(
+      // Text themes modernas (Inter via Google Fonts)
+      textTheme: GoogleFonts.interTextTheme(const TextTheme(
         headlineLarge: TextStyle(
           fontSize: 36,
           fontWeight: FontWeight.w800,
@@ -224,19 +225,17 @@ class AppTheme {
           height: 1.4,
           letterSpacing: 0,
         ),
-      ),
+      )),
 
       // Color scheme moderna
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
         surface: surfaceColor,
-        background: backgroundColor,
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: textPrimaryColor,
         onSurface: textPrimaryColor,
-        onBackground: textPrimaryColor,
         onError: Colors.white,
       ),
 
@@ -260,6 +259,17 @@ class AppTheme {
         ),
         elevation: 8,
         behavior: SnackBarBehavior.floating,
+      ),
+
+      // Transições de página suaves
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        },
       ),
     );
   }

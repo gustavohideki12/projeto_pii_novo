@@ -5,12 +5,14 @@ class EmptyState extends StatefulWidget {
   final IconData icon;
   final String title;
   final String message;
+  // SVG removido por compatibilidade do ambiente
 
   const EmptyState({
     super.key,
     required this.icon,
     required this.title,
     required this.message,
+    
   });
 
   @override
@@ -51,13 +53,13 @@ class _EmptyStateState extends State<EmptyState> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 24 : 40),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
             child: Container(
-              padding: const EdgeInsets.all(40),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 24 : 40),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(32),
@@ -83,42 +85,8 @@ class _EmptyStateState extends State<EmptyState> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Ícone moderno com gradiente
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primaryColor.withOpacity(0.2),
-                          AppTheme.secondaryColor.withOpacity(0.15),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryColor.withOpacity(0.1),
-                            Colors.transparent,
-                          ],
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        widget.icon,
-                        size: 72,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                  ),
+                  // Ilustração (SVG) ou ícone
+                  _buildIllustration(context),
 
                   const SizedBox(height: 32),
 
@@ -187,6 +155,46 @@ class _EmptyStateState extends State<EmptyState> with TickerProviderStateMixin {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIllustration(BuildContext context) {
+    final size = MediaQuery.of(context).size.width < 400 ? 140.0 : 180.0;
+    // Fallback para ícone com container decorado
+    return Container(
+      width: MediaQuery.of(context).size.width < 400 ? 100 : 140,
+      height: MediaQuery.of(context).size.width < 400 ? 100 : 140,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryColor.withOpacity(0.2),
+            AppTheme.secondaryColor.withOpacity(0.15),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: AppTheme.primaryColor.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryColor.withOpacity(0.1),
+              Colors.transparent,
+            ],
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          widget.icon,
+          size: MediaQuery.of(context).size.width < 400 ? 50 : 72,
+          color: AppTheme.primaryColor,
         ),
       ),
     );

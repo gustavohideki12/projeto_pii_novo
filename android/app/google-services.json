@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "497694741433",
+    "project_id": "projeto-pi-1c9e3",
+    "storage_bucket": "projeto-pi-1c9e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497694741433:android:6a003b91d2680d70481c68",
+        "android_client_info": {
+          "package_name": "com.projeto.pi.projeto_obras"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_jZeIxMq_eaoDZFv5pURkKyePLCci1oY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -48,6 +48,15 @@ dependencies:
   # Icons
   iconsax: ^0.0.8
 
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.3
+  firebase_storage: ^12.3.2
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+  # flutter_svg removed due to compatibility issues in current Flutter SDK
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -59,6 +68,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+  # Firebase CLI
+  flutterfire_cli: ^0.1.1+2
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -69,6 +81,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Optional local illustrations path (add your SVGs here if desired)
+  # assets:
+  #   - assets/illustrations/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

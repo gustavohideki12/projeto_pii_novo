@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/app_constants.dart';
+import 'firebase_storage_service.dart';
 
 class ImageService {
   static final ImagePicker _picker = ImagePicker();
@@ -45,11 +47,15 @@ class ImageService {
 
   static Future<bool> isImageSizeValid(File image) async {
     try {
+      if (kIsWeb) {
+        // No web, assumir que a imagem é válida
+        return true;
+      }
       final sizeInBytes = await image.length();
       return sizeInBytes <= AppConstants.maxImageSize;
     } catch (e) {
       print('Erro ao verificar tamanho da imagem: $e');
-      return false;
+      return true; // Assumir válida em caso de erro
     }
   }
 
@@ -59,13 +65,87 @@ class ImageService {
   }
 
   static String getFileNameFromPath(String path) {
+    if (kIsWeb) {
+      // No web, usar '/' como separador
+      return path.split('/').last;
+    }
     return path.split(Platform.pathSeparator).last;
   }
 
+  // Upload de imagem para Firebase Storage
+  static Future<String> uploadImageToFirebase({
+    required File image,
+    required String userId,
+    required String projectId,
+  }) async {
+    try {
+      // Validar tipo de arquivo
+      if (!FirebaseStorageService.isValidImageType(image.path)) {
+        throw Exception('Tipo de arquivo não suportado');
+      }
+
+      // Validar tamanho do arquivo
+      final fileSize = await image.length();
+      if (!FirebaseStorageService.isValidImageSize(fileSize)) {
+        throw Exception('Arquivo muito grande. Máximo: 10MB');
+      }
+
+      // Upload para Firebase Storage
+      final downloadUrl = await FirebaseStorageService.uploadImage(
+        imageFile: image,
+        userId: userId,
+        projectId: projectId,
+      );
+
+      return downloadUrl;
+    } catch (e) {
+      print('Erro ao fazer upload da imagem: $e');
+      throw Exception('Erro ao fazer upload da imagem: $e');
+    }
+  }
+
+  // Upload de múltiplas imagens para Firebase Storage
+  static Future<List<String>> uploadMultipleImagesToFirebase({
+    required List<File> images,
+    required String userId,
+    required String projectId,
+  }) async {
+    try {
+      final List<String> downloadUrls = [];
+
+      for (final image in images) {
+        // Validar cada imagem
+        if (!FirebaseStorageService.isValidImageType(image.path)) {
+          print('Pulando imagem com tipo não suportado: ${image.path}');
+          continue;
+        }
+
+        final fileSize = await image.length();
+        if (!FirebaseStorageService.isValidImageSize(fileSize)) {
+          print('Pulando imagem muito grande: ${image.path}');
+          continue;
+        }
+
+        final downloadUrl = await FirebaseStorageService.uploadImage(
+          imageFile: image,
+          userId: userId,
+          projectId: projectId,
+        );
+        downloadUrls.add(downloadUrl);
+      }
+
+      return downloadUrls;
+    } catch (e) {
+      print('Erro ao fazer upload de múltiplas imagens: $e');
+      throw Exception('Erro ao fazer upload de múltiplas imagens: $e');
+    }
+  }
+
+  // Método legado para compatibilidade (retorna path local)
   static Future<String> saveImageToAppDirectory(File image, String projectId) async {
     try {
-      // Para esta implementação inicial, retornamos apenas o caminho original
-      // Em uma implementação mais avançada, poderíamos salvar em um diretório específico do app
+      // Para compatibilidade com código existente, retornamos o path local
+      // Em produção, use uploadImageToFirebase
       return image.path;
     } catch (e) {
       print('Erro ao salvar imagem: $e');

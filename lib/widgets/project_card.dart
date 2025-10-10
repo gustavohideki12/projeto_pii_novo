@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import '../models/project.dart';
 import '../utils/app_theme.dart';
 
@@ -47,7 +46,7 @@ class _ProjectCardState extends State<ProjectCard> with TickerProviderStateMixin
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: Container(
-            margin: const EdgeInsets.only(bottom: 20),
+            margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.width < 400 ? 16 : 20),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(28),
@@ -66,7 +65,7 @@ class _ProjectCardState extends State<ProjectCard> with TickerProviderStateMixin
                 onTapCancel: () => _animationController.reverse(),
                 borderRadius: BorderRadius.circular(28),
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -205,7 +204,7 @@ class _ProjectCardState extends State<ProjectCard> with TickerProviderStateMixin
                       const SizedBox(height: 16),
 
                       // Galeria de imagens moderna
-                      if (widget.project.imagePaths.isNotEmpty)
+                      if (widget.project.imageUrls.isNotEmpty)
                         Container(
                           height: 100,
                           decoration: BoxDecoration(
@@ -222,7 +221,7 @@ class _ProjectCardState extends State<ProjectCard> with TickerProviderStateMixin
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${widget.project.imagePaths.length} imagem(ns)',
+                                '${widget.project.imageUrls.length} imagem(ns)',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.textSecondaryColor,
                                   fontWeight: FontWeight.w500,
