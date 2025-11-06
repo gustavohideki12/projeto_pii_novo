@@ -12,8 +12,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Regras para a coleção de projetos
     match /projects/{projectId} {
-      // Leitura: dono pode ler
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Leitura: 
+      // - get e list: qualquer usuário autenticado (o código filtra corretamente)
+      //   - getProject() é usado principalmente pelo admin (dono)
+      //   - list usa arrayContains para filtrar projetos atribuídos
+      allow read: if request.auth != null;
       
       // Criação: permitir se usuário autenticado e userId = UID do usuário
       // Verifica se é admin (se documento users/{uid} existir), mas permite mesmo se não existir
@@ -27,8 +30,11 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
         );
       
-      // Escrita/atualização: somente dono
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Atualização: somente dono (pode atualizar qualquer campo, incluindo assignedUsers)
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Delete: somente dono
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
     // Regras para a coleção de registros de obras

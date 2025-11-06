@@ -12,6 +12,7 @@ import 'registro_obra_detail_screen.dart';
 import '../services/image_service.dart';
 import 'registro_obra_form_screen.dart';
 import '../widgets/safe_image.dart';
+import 'project_users_screen.dart';
 
 class RegistrosTimelineScreen extends StatefulWidget {
   final String? projectId; // opcional: filtra por obra
@@ -67,6 +68,30 @@ class _RegistrosTimelineScreenState extends State<RegistrosTimelineScreen> {
         title: Text(widget.projectName == null ? 'Linha do Tempo' : 'Obra: ${widget.projectName}'),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
+        actions: [
+          // Botão para gerenciar usuários (apenas admin e quando há projectId)
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              if (!authProvider.isAdmin || widget.projectId == null) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                icon: const Icon(Icons.people),
+                tooltip: 'Gerenciar usuários do projeto',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProjectUsersScreen(
+                        projectId: widget.projectId!,
+                        projectName: widget.projectName ?? 'Projeto',
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
