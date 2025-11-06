@@ -237,6 +237,15 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  // Limpar projetos (usado no logout)
+  void clearProjects() {
+    _projectsSubscription?.cancel();
+    _projects = [];
+    _currentUserId = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   // Limpar recursos
   @override
   void dispose() {
