@@ -60,14 +60,22 @@ class ProjectService {
   // Salvar projeto no Firestore
   static Future<bool> saveProject(Project project) async {
     try {
+      print('ProjectService.saveProject - Iniciando...');
+      print('Collection: $_collectionName');
+      print('Document ID: ${project.id}');
+      print('Data: ${project.toFirestore()}');
+      
       await _firestore
           .collection(_collectionName)
           .doc(project.id)
           .set(project.toFirestore());
 
+      print('ProjectService.saveProject - Sucesso!');
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Erro ao salvar projeto: $e');
+      print('Stack trace: $stackTrace');
+      print('Tipo do erro: ${e.runtimeType}');
       return false;
     }
   }

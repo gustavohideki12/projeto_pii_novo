@@ -14,17 +14,21 @@ service cloud.firestore {
     match /projects/{projectId} {
       // Leitura: dono pode ler
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      // Criação: apenas admins podem criar projetos (validados via users/{uid}.role)
-      allow create: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
-        request.resource.data.userId == request.auth.uid;
-      // Escrita/atualização: somente dono (admin já será o dono ao criar)
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       
-      // Permitir criação apenas se o usuário estiver autenticado
-      // e o userId do documento for igual ao UID do usuário
+      // Criação: permitir se usuário autenticado e userId = UID do usuário
+      // Verifica se é admin (se documento users/{uid} existir), mas permite mesmo se não existir
       allow create: if request.auth != null 
-        && request.auth.uid == request.resource.data.userId;
+        && request.resource.data.userId == request.auth.uid
+        && (
+          // Se documento users/{uid} não existir, permite
+          !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          ||
+          // Se existir, verifica se é admin
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        );
+      
+      // Escrita/atualização: somente dono
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
     // Regras para a coleção de registros de obras
